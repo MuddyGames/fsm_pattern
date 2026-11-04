@@ -12,17 +12,21 @@ void InitGame(GameData *data)
 	data->player = player;
 	data->player->base.direction = (Vector2){0.0f, 0.0f};
 
-	// Create Mediator
-	data->playerMediator = CreateMediator((GameObject *)data->player);
+	// Initialise HUD
+	InitHud(&data->hud);
+
+	// Create Mediator: it connects the player and the HUD
+	data->playerMediator = CreateMediator((GameObject *)data->player, &data->hud);
+	data->activeCommand = NONE;
 
 	// Initialise an NPC object with the name "NPC Guard"
-	NPC *enemy = InitNPC("NPC Guard", 100.0f, 200.0f, radius);
+	NPC *enemy = InitNPC("NPC Guard", SCREEN_WIDTH - 150.0f, 150.0f, radius); // top right, clear of the HUD
 
 	data->npc = enemy;
 	data->npc->base.direction = (Vector2){0.0f, 0.0f};
 
-	// Create Mediator
-	data->npcMediator = CreateMediator((GameObject *)data->npc);
+	// Create Mediator: the NPC has no HUD
+	data->npcMediator = CreateMediator((GameObject *)data->npc, NULL);
 
 	// Initialise Input Managers
 	InitInputManager();
@@ -33,8 +37,8 @@ void InitGame(GameData *data)
 void UpdateGame(GameData *data, float deltaTime)
 {
 	// Poll input and Handle Command
-	Command command = PollInput();
-	MediatorHandleCommand(data->playerMediator, command, deltaTime);
+	data->activeCommand = PollInput();
+	MediatorHandleCommand(data->playerMediator, data->activeCommand, deltaTime);
 	UpdateState((GameObject *)data->player, deltaTime);
 
 	Command npcCommand = PollAI();
@@ -92,6 +96,8 @@ void DrawHealthBar(const GameObject *object)
 
 	// Calculate health percentage
 	float healthPercentage = (float)object->health / 100;
+	if (healthPercentage < 0.0f)
+		healthPercentage = 0.0f;
 
 	// Draw the health bar background (red)
 	DrawRectangle(healthBarX, healthBarY, healthBarWidth, healthBarHeight, GRAY);
@@ -154,16 +160,28 @@ void DrawGame(const GameData *data)
 
 	// Draw Position
 	DrawPositionInformation(text, &data->npc->base);
+
+	// Drawing HUD
+	DrawHud(&data->hud);
 }
 
 // Close Game and free resources
 void CloseGame(GameData *data)
 {
-	printf("Game Closed!\n");
+	TraceLog(LOG_INFO, "Game Closed!");
 
 	// Free Mediators
-	DeleteMediator(data->playerMediator);
-	DeleteMediator(data->npcMediator);
+	if (data->playerMediator)
+	{
+		free(data->playerMediator);
+		data->playerMediator = NULL;
+	}
+
+	if (data->npcMediator)
+	{
+		free(data->npcMediator);
+		data->npcMediator = NULL;
+	}
 
 	// Free GameObject
 	DeleteGameObject((GameObject *)data->player);
