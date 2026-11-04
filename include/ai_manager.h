@@ -3,8 +3,13 @@
 
 #include "command.h"
 
+// Init AI Manager
 void InitAIManager();
+
+// Poll AI: the NPC's version of PollInput()
 Command PollAI();
+
+// Cleanup
 void DeleteAIManager();
 
 #endif // AI_MANAGER_H
