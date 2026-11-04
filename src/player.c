@@ -22,6 +22,9 @@ Player *InitPlayer(const char *name, float x, float y, int r)
 
 	InitPlayerFSM(&player->base);
 
+	// Run the Entry of the starting state (Idle), so it is set up like any other state
+	player->base.stateConfigs[STATE_IDLE].Entry(&player->base, 0.0f);
+
 	return player;
 }
 
@@ -122,9 +125,6 @@ void InitPlayerFSM(GameObject *object)
 // Handles events for the Player when in the Idle state
 void PlayerIdleHandleEvent(GameObject *object, Event event, float deltaTime)
 {
-	Player *player = (Player *)object;
-	printf("\n%s Idle HandleEvent\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 
 	switch (event)
 	{
@@ -155,9 +155,6 @@ void PlayerIdleHandleEvent(GameObject *object, Event event, float deltaTime)
 // Handles events for the Player when in the moving state
 void PlayerMovingHandleEvent(GameObject *object, Event event, float deltaTime)
 {
-	Player *player = (Player *)object;
-	printf("%s moving HandleEvent\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 
 	switch (event)
 	{
@@ -186,9 +183,6 @@ void PlayerMovingHandleEvent(GameObject *object, Event event, float deltaTime)
 // Handles events for the Player when in the Firing state
 void PlayerFiringHandleEvent(GameObject *object, Event event, float deltaTime)
 {
-	Player *player = (Player *)object;
-	printf("\n%s Firing HandleEvent\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 
 	switch (event)
 	{
@@ -212,9 +206,6 @@ void PlayerFiringHandleEvent(GameObject *object, Event event, float deltaTime)
 // Handles events for the Player when in the Jumping  state
 void PlayerJumpingHandleEvent(GameObject *object, Event event, float deltaTime)
 {
-	Player *player = (Player *)object;
-	printf("\n%s Jumping HandleEvent\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 
 	switch (event)
 	{
@@ -238,10 +229,8 @@ void PlayerJumpingHandleEvent(GameObject *object, Event event, float deltaTime)
 // Handles events for the Player when in the Die state
 void PlayerDieHandleEvent(GameObject *object, Event event, float deltaTime)
 {
+	(void)object;
 	(void)deltaTime;
-	Player *player = (Player *)object;
-	printf("\n%s Die HandleEvent\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 	// Complete the remainder of the method
 	(void)event; // ignoring event
 }
@@ -249,10 +238,8 @@ void PlayerDieHandleEvent(GameObject *object, Event event, float deltaTime)
 // Handles events for the Player when in the Respawn state
 void PlayerRespawnHandleEvent(GameObject *object, Event event, float deltaTime)
 {
+	(void)object;
 	(void)deltaTime;
-	Player *player = (Player *)object;
-	printf("\n%s Respawn HandleEvent\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 	// Complete the remainder of the method
 	(void)event; // ignoring event
 }
@@ -272,8 +259,6 @@ void PlayerEnterIdle(GameObject *object, float deltaTime)
 void PlayerUpdateIdle(GameObject *object, float deltaTime)
 {
 	Player *player = (Player *)object;
-	printf("\n%s -> UPDATE -> Idle\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 	// Complete the remainder of the method
 
 	player->base.timer += deltaTime;
@@ -311,8 +296,6 @@ void PlayerEnterMoving(GameObject *object, float deltaTime)
 void PlayerUpdateMoving(GameObject *object, float deltaTime)
 {
 	Player *player = (Player *)object;
-	printf("\n%s -> UPDATE -> Moving\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 	// Complete the remainder of the method
 
 	float speed = 200.0f;
@@ -362,8 +345,6 @@ void PlayerEnterFiring(GameObject *object, float deltaTime)
 void PlayerUpdateFiring(GameObject *object, float deltaTime)
 {
 	Player *player = (Player *)object;
-	printf("\n%s -> UPDATE -> Firing\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 	// Complete the remainder of the method
 	// Check if the firing should end or be interrupted (e.g., stamina depletion)
 	player->base.timer += deltaTime;
@@ -426,8 +407,6 @@ void PlayerEnterJumping(GameObject *object, float deltaTime)
 void PlayerUpdateJumping(GameObject *object, float deltaTime)
 {
 	Player *player = (Player *)object;
-	printf("\n%s -> UPDATE -> Jumping\n", object->name);
-	printf("Stamina: %.1f, Mana: %.1f\n\n", player->stamina, player->mana);
 	// Complete the remainder of the method
 	// Example: Check if the Jumping duration is over
 
@@ -476,7 +455,6 @@ void PlayerEnterDie(GameObject *object, float deltaTime)
 
 void PlayerUpdateDie(GameObject *object, float deltaTime)
 {
-	printf("\n%s -> UPDATE -> Die\n", object->name);
 	ChangeState(object, STATE_RESPAWN, deltaTime);
 	// Complete the remainder of the method
 }
@@ -504,7 +482,6 @@ void PlayerEnterRespawn(GameObject *object, float deltaTime)
 
 void PlayerUpdateRespawn(GameObject *object, float deltaTime)
 {
-	printf("\n%s -> UPDATE -> Respawn\n", object->name);
 	ChangeState(object, STATE_IDLE, deltaTime);
 	// Complete the remainder of the method
 }
