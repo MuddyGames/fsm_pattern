@@ -29,6 +29,9 @@ NPC *InitNPC(const char *name, float x, float y, int r)
 	// Initialize the NPC's finite state machine (FSM) with state configurations
 	InitNPCFSM(&npc->base);
 
+	// Run the Entry of the starting state (Idle), so it is set up like any other state
+	npc->base.stateConfigs[STATE_IDLE].Entry(&npc->base, 0.0f);
+
 	// Return a pointer to the initialized NPC object
 	return npc;
 }
@@ -100,9 +103,6 @@ void InitNPCFSM(GameObject *object)
 // Handles events for the NPC when in the Idle state
 void NPCIdleHandleEvent(GameObject *object, Event event, float deltaTime)
 {
-	NPC *npc = (NPC *)object;
-	printf("\n%s Idle HandleEvent\n", object->name);
-	printf("Aggression: %d\n\n", npc->aggression);
 
 	switch (event)
 	{
@@ -129,9 +129,6 @@ void NPCIdleHandleEvent(GameObject *object, Event event, float deltaTime)
 // Handles events for the NPC when in the Firing state
 void NPCFiringHandleEvent(GameObject *object, Event event, float deltaTime)
 {
-	NPC *npc = (NPC *)object;
-	printf("\n%s Firing HandleEvent\n", object->name);
-	printf("Aggression: %d\n\n", npc->aggression);
 
 	switch (event)
 	{
@@ -155,9 +152,6 @@ void NPCFiringHandleEvent(GameObject *object, Event event, float deltaTime)
 // Handles events for the NPC when in the Dead state
 void NPCDeadHandleEvent(GameObject *object, Event event, float deltaTime)
 {
-	NPC *npc = (NPC *)object;
-	printf("\n%s Dead HandleEvent\n", object->name);
-	printf("Aggression: %d\n\n", npc->aggression);
 
 	switch (event)
 	{
@@ -197,8 +191,6 @@ void NPCEnterIdle(GameObject *object, float deltaTime)
 void NPCUpdateIdle(GameObject *object, float deltaTime)
 {
 	NPC *npc = (NPC *)object;
-	printf("%s -> UPDATE -> Idle\n", object->name);
-	printf("Aggression: %d\n\n", npc->aggression);
 	// During game loop and game ticks, execute Idle state behavior here, such as patrolling or observing.
 
 	npc->base.timer += deltaTime;
@@ -233,8 +225,6 @@ void NPCEnterFiring(GameObject *object, float deltaTime)
 void NPCUpdateFiring(GameObject *object, float deltaTime)
 {
 	NPC *npc = (NPC *)object;
-	printf("%s -> UPDATE -> Firing\n", object->name);
-	printf("Aggression: %d\n\n", npc->aggression);
 	// During game loop and game ticks, execute Firing state behavior here, such as dealing damage.
 	// Transition back to IDLE
 	npc->base.timer += deltaTime;
@@ -279,10 +269,8 @@ void NPCEnterDead(GameObject *object, float deltaTime)
 // Update function for Dead state, called repeatedly during game ticks while in Dead
 void NPCUpdateDead(GameObject *object, float deltaTime)
 {
+	(void)object;
 	(void)deltaTime;
-	NPC *npc = (NPC *)object;
-	printf("%s -> UPDATE -> Dead\n", object->name);
-	printf("Aggression: %d\n\n", npc->aggression);
 	// During game loop and game ticks, execute Dead state behavior here, such as preventing any actions.
 	// This could be a place to check if the NPC should be removed or respawned.
 }
