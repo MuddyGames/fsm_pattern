@@ -53,9 +53,11 @@ bool ChangeState(GameObject *obj, State newState, float deltaTime)
     if (!CanEnterState(obj, newState))
     {
         // If not valid, print an error message and return false
+        const char *from = obj->stateConfigs[obj->currentState].name;
+        const char *to = obj->stateConfigs[newState].name;
         printf("Invalid state transition from %s to %s\n",
-               obj->stateConfigs[obj->currentState].name,
-               obj->stateConfigs[newState].name);
+               from ? from : "(unset state)",
+               to ? to : "(unset state)");
         return false; // Transition failed
     }
 
