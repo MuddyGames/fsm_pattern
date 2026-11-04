@@ -3,8 +3,13 @@
 
 #include "command.h"
 
+// Init Input Manager
 void InitInputManager();
+
+// Poll Input
 Command PollInput();
+
+// Cleanup
 void DeleteInputManager();
 
 #endif // INPUT_MANAGER_H

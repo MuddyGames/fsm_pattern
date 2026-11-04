@@ -22,6 +22,7 @@ Mediator *CreateMediator(GameObject *object, Hud *hud);
 
 //void MediatorExecuteCommand(Mediator *mediator, Command command, float deltaTime);
 void MediatorHandleCommand(Mediator *mediator, Command command, float deltaTime);
-// Mediator Cleanup
+
+// Cleanup
 void DeleteMediator(Mediator *mediator);
 #endif
