@@ -35,3 +35,12 @@ void MediatorHandleCommand(Mediator *mediator, Command command, float deltaTime)
         UpdateHud(mediator->hud, command, object->stateConfigs[object->currentState].name);
     }
 }
+
+// Cleanup function to free the memory allocated for the mediator
+void DeleteMediator(Mediator *mediator)
+{
+    if (mediator)
+    {
+        free(mediator);
+    }
+}

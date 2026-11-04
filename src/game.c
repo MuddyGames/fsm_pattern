@@ -171,17 +171,11 @@ void CloseGame(GameData *data)
 	TraceLog(LOG_INFO, "Game Closed!");
 
 	// Free Mediators
-	if (data->playerMediator)
-	{
-		free(data->playerMediator);
-		data->playerMediator = NULL;
-	}
+	DeleteMediator(data->playerMediator);
+	data->playerMediator = NULL;
 
-	if (data->npcMediator)
-	{
-		free(data->npcMediator);
-		data->npcMediator = NULL;
-	}
+	DeleteMediator(data->npcMediator);
+	data->npcMediator = NULL;
 
 	// Free GameObject
 	DeleteGameObject((GameObject *)data->player);
