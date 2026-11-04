@@ -3,8 +3,7 @@
 
 #include <stdbool.h>
 
-// Forward declaration of the Mediator struct
-typedef struct Mediator Mediator;
+#include "gameobject.h"
 
 // Define the Command enum combining different commands into bit flags
 // Movement could be defined as just MOVE with direction (for simplicity, each direction is separate)
@@ -18,11 +17,12 @@ typedef enum
 	MOVE_RIGHT 		= 1 << 3,	// Binary: 001000
 	JUMP 			= 1 << 4,	// Binary: 010000
 	FIRE 			= 1 << 5,	// Binary: 100000
-	COMMAND_COUNT   = 6 // Total number of commands
+	COMMAND_COUNT	= 6 // Total number of commands
 } Command;
 
 // Function to execute a command
-void ExecuteCommand(Mediator *mediator, Command command, float deltaTime);
+// In this project the command becomes an FSM event for the game object
+void ExecuteCommand(Command command, GameObject *object, float deltaTime);
 
 // Function to show active command bits (for debugging)
 void GetCommandBits(Command cmd, char *buffer);

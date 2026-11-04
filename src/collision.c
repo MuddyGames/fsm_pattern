@@ -40,6 +40,12 @@ void CollisionEntry(GameObject *lhs, GameObject *rhs)
 	lhs->health -= DAMAGE_DEFAULT; // Example: Reduce lhs's health on collision
 	rhs->health -= DAMAGE_DEFAULT;
 
+	// Keep health from going below zero (EVENT_DIE is not sent yet, see README Task 3)
+	if (lhs->health < 0)
+		lhs->health = 0;
+	if (rhs->health < 0)
+		rhs->health = 0;
+
 	printf("Player Damage [ %d ] Health[ %d ]\n", DAMAGE_DEFAULT, lhs->health);
 	printf("NPC Damage [ %d ] Health[ %d ]\n", DAMAGE_DEFAULT, rhs->health);
 }
