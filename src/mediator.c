@@ -1,34 +1,37 @@
 #include <stdbool.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "mediator.h"
+#include "gameobject.h"
+#include "hud.h"
 #include "command.h"
 
 // For a good explanation on Mediator Pattern see
 // https://www.geeksforgeeks.org/mediator-design-pattern/
+// https://refactoring.guru/design-patterns/mediator
 
 // Creates and initializes a new mediator instance
-Mediator *CreateMediator(GameObject *object)
+Mediator *CreateMediator(GameObject *object, Hud *hud)
 {
     Mediator *mediator = (Mediator *)malloc(sizeof(Mediator));
     mediator->object = object;
+    mediator->hud = hud;
     return mediator;
 }
 
-// Function to execute a command through the mediator
+// Function to handle command and what needs to be done with it. The mediator is the only place that knows about both the game object and the HUD.
 void MediatorHandleCommand(Mediator *mediator, Command command, float deltaTime)
 {
-    ExecuteCommand(mediator, command, deltaTime);
-}
+    // One command, two collaborators. Neither knows about the other:
+    // The mediator is the only place that knows about both.
 
-// Mediator cleanup
-void DeleteMediator(Mediator *mediator)
-{
-    // Free Mediator
-	if (mediator)
-	{
-		free(mediator);
-		mediator = NULL;
-	}
+    // 1. Game object acts on the command (via the Command System, which sends FSM events)
+    ExecuteCommand(command, mediator->object, deltaTime);
+
+    // 2. HUD shows the command, and the name of the state the object is now in
+    if (mediator->hud)
+    {
+        GameObject *object = mediator->object;
+        UpdateHud(mediator->hud, command, object->stateConfigs[object->currentState].name);
+    }
 }
