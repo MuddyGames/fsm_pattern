@@ -12,7 +12,7 @@
 #include "mediator.h"
 
 #include "inputmanager.h"
-#include "aimanager.h"
+#include "ai_manager.h"
 
 #include "command.h"
 

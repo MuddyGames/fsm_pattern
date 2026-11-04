@@ -1,11 +1,12 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "inputmanager.h"
+#include "ai_manager.h"
 
 void InitAIManager()
 {
-    // Initialize AI
+    // Seed the random number generator so the AI is different every run
+    srand((unsigned int)time(NULL));
 }
 
 Command PollAI()
