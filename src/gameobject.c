@@ -3,6 +3,9 @@
 // Initializes a GameObject with default values and assigns a name
 void InitGameObject(GameObject *obj, const char *name)
 {
+    // Start from all zeros: malloc leaves garbage in fields like isColliding and timer
+    memset(obj, 0, sizeof(GameObject));
+
     // Set the GameObject's name
     obj->name = name;
 
