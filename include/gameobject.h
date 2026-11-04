@@ -16,7 +16,8 @@
 #include "cute_c2.h"
 
 // Base structure for a game object
-typedef struct GameObject
+// typedef GameObject is already declared in fsm.h, so only the struct is defined here
+struct GameObject
 {
     const char *name; // The name of the game object (e.g., "Player", "Enemy")
 
@@ -43,7 +44,7 @@ typedef struct GameObject
 
     int health; // The health of the game object
 
-} GameObject;
+};
 
 // Initialize a new game object with the given name and default values
 void InitGameObject(GameObject *obj, const char *name);
