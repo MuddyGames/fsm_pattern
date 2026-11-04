@@ -1,9 +1,6 @@
-#include <stdlib.h>
-#include <time.h>
-
 #include <raylib.h>
 
-#include "inputmanager.h"
+#include "input_manager.h"
 
 // Sample input initialization
 void InitInputManager()
@@ -31,8 +28,6 @@ Command PollInput()
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         command |= FIRE;
 
-    TraceLog(LOG_INFO, "Keyboard Command %d", command);
-
     // Controller Input
     if (IsGamepadAvailable(0))
     {
@@ -50,7 +45,17 @@ Command PollInput()
         if (GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_TRIGGER) > 0.5f)
             command |= FIRE;
 
-        TraceLog(LOG_INFO, "Controller Command %d", command);
+    }
+
+    // Log the command only when it changes (a key or button pressed or released),
+    // not every frame, so the console stays readable
+    static Command previousCommand = NONE;
+    if (command != previousCommand)
+    {
+        char bits[COMMAND_COUNT + 1];
+        GetCommandBits(command, bits);
+        TraceLog(LOG_INFO, "Command Bits: %s (%d)", bits, command);
+        previousCommand = command;
     }
 
     return command;
@@ -60,4 +65,3 @@ void DeleteInputManager()
 {
     // Cleanup resources if needed
 }
-
