@@ -1,166 +1,290 @@
-# Game FSM Starter Kit
+# Practical 9: The Finite State Machine (FSM) Pattern
 
-## Overview
+In this practical, the player and an NPC each get a **finite state machine**. At any moment each one is in exactly one **state** (Idle, Moving, Firing, Jumping, Dead or Respawn), and it only changes state when an **event** arrives and its **transition table** allows the move. It's the last two practicals put together: the **Command** and **Mediator** patterns handle input, **cute_c2** handles collisions, and the FSM decides what each object does about it all.
 
-This starter kit provides a basic framework for creating a game using C and a finite state machine (FSM) pattern. The project combines **Finite State Machines (FSM)**, **Command Pattern**, **Collision Detection**, and **Mediator Pattern** and includes essential components such as a `GameObject`, FSM logic for both `Player` and `NPC` entities, and a simple structure for managing events and states. This kit is designed to help you put a FSM in a game focusing on core concepts like event handling, state transitions, and game object management.
+Your job is to fix a transition that's missing, make the player and NPC die and come back, add states and commands of your own, and give the NPC a bit of a brain.
 
-The project is organised into several source and header files, along with a `Makefile` to easily compile, build, and run the game.
+By the end you'll understand why games use state machines instead of a pile of `bool isJumping, isFiring, isDead` flags, and how function pointers let each state bring its own behaviour.
 
-## Table of Contents
+> The project was generated with [raylib project creator](https://raysan5.itch.io/raylib-project-creator) by raysan5.
 
-- [Overview](#overview)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Core Systems](#core-systems)
-- [Walkthrough](#walkthrough)
-- [Tasks](#tasks)
-- [Resources](#resources)
-- [Support](#support)
+---
 
-## Overview <a name="overview"></a>
+## Short version
 
-This starter kit provides a complete framework for creating games with:
+If you just want to get going, this is the whole thing in a few lines:
 
-- **Finite State Machine (FSM)**: State-based behavior for game objects (Player, NPC)
-- **Command Pattern**: Bitwise command system for input handling
-- **Collision Detection**: Circle-based collision using cute_c2 library
-- **Mediator Pattern**: Decoupled communication between systems
-- **Event System**: Event-driven state transitions
-- **Cross-Platform Support**: Works on Windows (MSYS2), Linux (Debian), and MacOS
-
-## Quick Start <a name="quick-start"></a>
-
-### 1. Clone the Repository
+**1. Clone**
 
 ```bash
-git clone https://MuddyGames@bitbucket.org/MuddyGames/raylib_fsm.git raylib_fsm_project
-cd raylib_fsm_project
+mkdir -p ~/Projects
+cd ~/Projects
+git clone https://github.com/MuddyGames/fsm_pattern
 ```
 
-### 2. Install Toolchain (if needed)
+**2. Set up raylib**
+
+*Linux:*
 
 ```bash
-make toolchain
+cd ~/Projects/fsm_pattern/setup
+bash setup_linux.sh
 ```
 
-### 3. Build and Run
+or make the script executable and run it directly:
 
 ```bash
-make build
-make run
+cd ~/Projects/fsm_pattern/setup
+chmod +x setup_linux.sh
+./setup_linux.sh
 ```
 
-### 4. Clean Build
+*Windows* (install [raylib](https://raysan5.itch.io/raylib) first, and then use w64devkit terminal):
 
 ```bash
-make clean
+cd ~/Projects/fsm_pattern/setup
+sh setup_windows.sh
 ```
 
-## Architecture <a name="architecture"></a>
+**3. Build and run**
 
-The system integrates four major design patterns and systems:
+```bash
+cd ~/Projects/fsm_pattern
+make run                            # desktop
+```
 
-### System Flow
+The rest of this page explains each step, and what to do when the computer says no.
+
+---
+
+## Step 1: Get the project
+
+Keep all your work in a `Projects` folder in your home directory.
+
+- **Linux:** open a terminal.
+- **Windows:** open the **w64devkit** terminal (`C:\raylib\w64devkit\w64devkit.exe`).
+
+Then type the same commands on both:
+
+```bash
+mkdir -p ~/Projects
+cd ~/Projects
+git clone https://github.com/MuddyGames/fsm_pattern
+```
+
+Your project now lives in `~/Projects/fsm_pattern`.
+
+---
+
+## Step 2: Install raylib and Emscripten (once only)
+
+If you set these up for an earlier practical, skip this step. They're shared by every raylib project.
+
+### Linux (Debian, Ubuntu, Pop!_OS or Arch)
+
+```bash
+cd ~/Projects/fsm_pattern/setup
+bash setup_linux.sh
+```
+
+It will ask for your password to install packages. It takes a few minutes, especially on lab machines.
+
+### Windows
+
+Install the **[raylib installer](https://raysan5.itch.io/raylib)** and keep the default location, `C:\raylib`. Then in the **w64devkit** terminal:
+
+```bash
+cd ~/Projects/fsm_pattern/setup
+sh setup_windows.sh
+```
+
+When it finishes, close w64devkit and open it again.
+
+> No more MSYS2. Everything now runs in the w64devkit terminal that comes with the raylib installer.
+
+For the manual steps, see the [drawing_primitives README](https://github.com/MuddyGames/drawing_primitives#manual-setup-only-if-the-script-didnt-work-for-you).
+
+---
+
+## Step 3: Build and run
+
+Every command runs from the project folder:
+
+```bash
+cd ~/Projects/fsm_pattern
+```
+
+### On your desktop
+
+The same commands work on Linux and Windows (w64devkit):
+
+| Command | What it does |
+|---|---|
+| `make` | Builds the game |
+| `make run` | Builds it and runs it |
+| `make BUILD_MODE=DEBUG` | Builds with debug info, for stepping through in the debugger |
+| `make clean` | Deletes the `build` folder, so the next build starts fresh |
+
+A window should open with two circles: the **player** (green, in the middle) and an **NPC guard** (grey, top right). The HUD in the top left shows the command bits and the player's current state.
+
+| Key | Action |
+|---|---|
+| WASD or arrow keys, D-pad | Move |
+| SPACE, or the bottom face button | Jump |
+| Left mouse button, or the right trigger | Fire |
+
+Bump into the NPC and both health bars drop.
+
+Keep the terminal where you can see it. Every state change is printed there, and it's the best way to watch the FSM working.
+
+### In your browser
+
+```bash
+make run_web
+```
+
+This builds the web version, starts a small local web server and opens
+**<http://127.0.0.1:8000/fsm_pattern.html>** in your browser.
+
+Press **Ctrl+C** in the terminal to stop the server.
+
+| Command | What it does |
+|---|---|
+| `make web` | Builds the web version only |
+| `make run_web` | Builds it and opens it in your browser |
+| `make stop_web` | Stops a web server left running from earlier |
+
+In the browser, the state changes appear in the developer console (**F12**).
+
+### In VS Code
+
+Open `projects/VSCode/main.code-workspace` (**File → Open Workspace from File…**).
+
+- **Ctrl+Shift+B** builds.
+- **F5** builds and starts the debugger. The first time, choose **Debug** in the Run and Debug drop-down.
+- **Terminal → Run Task** lists Run, Run Web, Stop Web Server and Clean.
+
+Set a breakpoint in `ChangeState()` in `fsm.c` and press SPACE. Look at `obj->currentState` and `newState`, then step into `currentConfig->Exit` and watch it land in the right state's function. That's function pointers doing their job.
+
+---
+
+## How the project is laid out
+
+```
+fsm_pattern/
+├── Makefile               build instructions
+├── src/
+│   ├── main.c             opens the window, runs the game loop
+│   ├── game.c             sets up, updates and draws the game; checks collisions
+│   ├── fsm.c              the state machine: HandleEvent, ChangeState, UpdateState
+│   ├── gameobject.c       what the player and NPC have in common
+│   ├── player.c           the player's states and transition tables
+│   ├── npc.c              the NPC's states and transition tables
+│   ├── input_manager.c    turns key, mouse and button presses into commands
+│   ├── ai_manager.c       makes up commands for the NPC
+│   ├── mediator.c         passes each command to a game object and the HUD
+│   ├── command.c          ExecuteCommand(): turns command bits into FSM events
+│   ├── hud.c              shows the command bits and the player's state on screen
+│   ├── collision.c        collision checks, pushback and damage
+│   └── cute_c2_impl.c     builds the cute_c2 collision library; leave it alone
+├── include/
+│   ├── fsm.h              the State enum and the StateConfig struct
+│   ├── events.h           the Event enum
+│   ├── command.h          the command bit flags
+│   ├── gameobject.h       the GameObject struct
+│   ├── player.h, npc.h    Player and NPC structs, and their state functions
+│   ├── hud.h              Hud struct
+│   ├── constants.h        screen size, damage and other constants
+│   ├── cute_c2.h          the cute_c2 collision library
+│   └── …                  one header for each .c file
+├── resources/             sprites and images
+├── build/                 everything make creates
+├── platform/              icons and web page template; leave these alone
+└── setup/                 setup scripts (run once)
+```
+
+Each frame, `UpdateGame()` in `game.c` does the same three things for the player:
+
+```c
+data->activeCommand = PollInput();                                             // 1. keys -> command bits
+MediatorHandleCommand(data->playerMediator, data->activeCommand, deltaTime);   // 2. command bits -> events -> maybe a new state
+UpdateState((GameObject *)data->player, deltaTime);                            // 3. run the current state's Update
+```
+
+The mediator passes the command to its two **colleagues**, just like the last practical:
+
+```c
+void MediatorHandleCommand(Mediator *mediator, Command command, float deltaTime)
+{
+    ExecuteCommand(command, mediator->object, deltaTime);   // 1. the game object acts on it (through its FSM)
+
+    if (mediator->hud)                                      // 2. the HUD shows it, with the state's name
+    {
+        GameObject *object = mediator->object;
+        UpdateHud(mediator->hud, command, object->stateConfigs[object->currentState].name);
+    }
+}
+```
+
+The NPC does exactly the same, except its commands come from `PollAI()` instead of the keyboard, and its mediator has no HUD (`hud` is `NULL`). The FSM can't tell the difference.
+
+**What changed from the command pattern?** Only `ExecuteCommand()`. Before, it called the player's actions directly (`MoveLeft()`, `Jump()`). Now it sends **events** (`EVENT_MOVE`, `EVENT_JUMP`), and the **current state** decides what they mean.
+
+---
+
+## How it all fits together
 
 [![](https://mermaid.ink/img/pako:eNpdk1uP2jAQhf-K5Up9YoGEXCCtVlpCgFWVLiptHxpWlUnGkNaxkePQTRH_vcYJt-Yhysz5zhlHGh9wKjLAAd5Istuir-MVR_p5Sp75rlJoAvs8hfLjWvYeP0G9FkRmvVBwJQVjIF_Rw8MjGrdwTDjZgDTwQuum-9oEjg0ZJqEoCsIzNM7Vn7wEw8Yv36Of3xYIvd-DVB_Q9PlL1NpCY5skMWQ5UaLJPhdzHcSgTWwNE2OILnOiN0grlQtunE31nyUylmkyXcYGamKjPfDz4aeGmCUzUsDL-hekqvlHRmqQvc-LsOVmhpvr4YzlpR6KlnWpoDB0uIX090VpHfNmdlM071LVDNATojljwTuwqEvprTJuFUqpA9atEl6Uk-tWmZwVVyt3adF1Dr1Pm96k3Suz6wlG98r8mjaiFHdwAbIgeab363DiVlhtoYAVDvRnBpRUTK3wih81SiolljVPcaBkBR0sRbXZ4oASVuqq2mVEwSQnek-LS3dH-A8hirNlI0-jWjvwDGQoKq5wYFuugXFwwG84GPRH3YE7dF2rb7uDUd_r4Fp3va5t-47v2JbtOZ4zdI4d_NfE97tD3_eGjuW5jm-7luV0sF5CvYNxc3vMJTr-AwGUB2U?type=png)](https://mermaid.live/edit#pako:eNpdk1uP2jAQhf-K5Up9YoGEXCCtVlpCgFWVLiptHxpWlUnGkNaxkePQTRH_vcYJt-Yhysz5zhlHGh9wKjLAAd5Istuir-MVR_p5Sp75rlJoAvs8hfLjWvYeP0G9FkRmvVBwJQVjIF_Rw8MjGrdwTDjZgDTwQuum-9oEjg0ZJqEoCsIzNM7Vn7wEw8Yv36Of3xYIvd-DVB_Q9PlL1NpCY5skMWQ5UaLJPhdzHcSgTWwNE2OILnOiN0grlQtunE31nyUylmkyXcYGamKjPfDz4aeGmCUzUsDL-hekqvlHRmqQvc-LsOVmhpvr4YzlpR6KlnWpoDB0uIX090VpHfNmdlM071LVDNATojljwTuwqEvprTJuFUqpA9atEl6Uk-tWmZwVVyt3adF1Dr1Pm96k3Suz6wlG98r8mjaiFHdwAbIgeab363DiVlhtoYAVDvRnBpRUTK3wih81SiolljVPcaBkBR0sRbXZ4oASVuqq2mVEwSQnek-LS3dH-A8hirNlI0-jWjvwDGQoKq5wYFuugXFwwG84GPRH3YE7dF2rb7uDUd_r4Fp3va5t-47v2JbtOZ4zdI4d_NfE97tD3_eGjuW5jm-7luV0sF5CvYNxc3vMJTr-AwGUB2U)
 
-### Key Components
+Four systems work together:
 
-1. **Finite State Machine (FSM)**
+1. **Finite State Machine (FSM):** keeps track of what each game object is doing (Idle, Moving, Firing, Jumping, Dead, Respawn). Events cause state changes, and each state has its own Entry, Update and Exit functions.
+2. **Command system:** each input is a bit flag, so several commands can happen at once (e.g. `MOVE_LEFT | JUMP`). Input knows nothing about game logic.
+3. **Collision detection:** circle-to-circle collisions with cute_c2, using a manifold to push objects apart. Collisions send events too (`EVENT_COLLISION_START`, `EVENT_COLLISION_END`).
+4. **Mediator:** passes each command to the game object and the HUD, so they never need to know about each other.
 
-The FSM manages the state transitions of game objects like the Player and NPC. The FSM handles event-driven state transitions and ensures each game object behaves according to its current state.
-   
-   - Manages object states (Idle, Moving, Firing, Jumping, Dead, Respawn)
-   - Event-driven state transitions
-   - State-specific entry, update, and exit functions
+---
 
-2. **Command System**
-   
-   - Bitwise command flags for simultaneous actions
-   - Supports command combinations (e.g., MOVE_LEFT | JUMP)
-   - Decoupled input from game logic
+## The state machine
 
-3. **Collision Detection**
-   
-   - Circle-based collision using cute_c2
-   - Collision manifolds for collision response
-   - Collision events (COLLISION_START, COLLISION_END)
+### States
 
-4. **Mediator Pattern**
-   
-   - Coordinates between Input, Command, and GameObject systems
-   - Reduces coupling between components
-
-## Project Structure <a name="project-structure"></a>
-
-```
-project-root/
-├── bin/                # Directory to hold the compiled binaries (output)
-├── include/            # Header files for the project
-│   ├── collision.h     # Collision system wrapper
-│   ├── command.h       # Command structures and functions
-│   ├── constants.h     # Shared constants (e.g., sizes, speeds, config values)
-│   ├── cute_c2.h       # cute_c2 collision
-│   ├── events.h        # Defines event types for the FSM
-│   ├── fsm.h           # FSM logic and state management declarations
-│   ├── game.h          # Game system interface
-│   ├── game_object.h   # Defines the GameObject structure and functions
-│   ├── input_manager.h # Input handling system
-│   ├── aimanager.h     # AI input handling for NPCs
-│   ├── mediator.h      # Mediator pattern interface
-│   ├── npc.h           # NPC-specific logic and behaviors
-│   └── player.h        # Player-specific logic and behaviors
-├── src/ # Source files for the project
-│   ├── collision.c     # Collision system wrapper implementation
-│   ├── command.c       # Command implementations
-│   ├── cute_c2_impl.c  # cute_c2 Makefile helper
-│   ├── fsm.c           # FSM logic for handling states and events
-│   ├── game.c          # Game system implementation
-│   ├── input_manager.c # Input system implementation
-│   ├── aimanager.c     # AI decision making
-│   ├── main.c          # Entry point, sets up and runs the game
-│   ├── mediator.c      # Mediator implementation
-│   ├── npc.c           # NPC-specific behaviors
-│   └── player.c        # Player-specific behaviors
-├── Makefile            # Makefile to build and run the project
-└── README.md           # This readme file
-```
-
-### Description of Files and Directories
-
-- **`bin/`**: This directory holds the output binary (`game`), which is the compiled executable of the game.
-- **`include/`**: Contains all the header files that define the structures, functions, and interfaces for the game components.
-- **`src/`**: Contains the source code for the game logic, including the main game loop, FSM implementation, and entity-specific logic (Player and NPC).
-- **`Makefile`**: The Makefile defines the build process, compiles the source files, places the resulting binary in the `bin/` directory, and automatically runs the game after a successful build.
-
-## Core Systems <a name="core-systems"></a>
-
-### 1. Finite State Machine (FSM)
-
-The FSM manages object behavior through states and transitions:
-
-**Available States:**
-
-- `STATE_IDLE` - GameObject at rest
-- `STATE_MOVING` - GameObject in motion
-- `STATE_FIRING` - GameObject attacking
-- `STATE_JUMPING` - GameObject jumping
-- `STATE_DEAD` - GameObject defeated
-- `STATE_RESPAWN` - GameObject respawning
+- `STATE_IDLE`: at rest
+- `STATE_MOVING`: in motion
+- `STATE_FIRING`: attacking
+- `STATE_JUMPING`: jumping
+- `STATE_DEAD`: defeated
+- `STATE_RESPAWN`: coming back
 
 [![](https://mermaid.ink/img/pako:eNqdk2tLwzAUhv9KOR-lG70n5oMwbJWK68Y2J2hFwppdYE1Glopz9L_bdrfOYRHzKe95n_MmB5ItTETCgMBaUcX8BZ1JmrY-rJhrxXq9etNarRttOOqMgvfQfwx29ZOu2d3eOIzuNaIF4yAalfKM3tvncUc66kXN9F04qKcX8ozf239M_3Hzh6duvx5e6jp-8P-X7gcd_8j6YfOYTfDFjE3w5Z2b6Mr7ZbxBMOx3nqOYlw2gQ8pkShdJ8Wa2ZSUGNWcpi4EU24RNabZUMcQ8L1CaKTHc8AkQJTOmgxTZbA5kSpfrQmWr5PTmjtUV5S9CpIeWmSyP2rcznjB5KzKugJgurmAgW_gEYtttD7nINZBtOZaJkavDpqRQ28TX2HAMhEwHO06uw1eVb7QdhD3DdF3PNC2MLNvTgSULJWR39yeqr5F_A_5z4Kw?type=png)](https://mermaid.live/edit#pako:eNqdk2tLwzAUhv9KOR-lG70n5oMwbJWK68Y2J2hFwppdYE1Glopz9L_bdrfOYRHzKe95n_MmB5ItTETCgMBaUcX8BZ1JmrY-rJhrxXq9etNarRttOOqMgvfQfwx29ZOu2d3eOIzuNaIF4yAalfKM3tvncUc66kXN9F04qKcX8ozf239M_3Hzh6duvx5e6jp-8P-X7gcd_8j6YfOYTfDFjE3w5Z2b6Mr7ZbxBMOx3nqOYlw2gQ8pkShdJ8Wa2ZSUGNWcpi4EU24RNabZUMcQ8L1CaKTHc8AkQJTOmgxTZbA5kSpfrQmWr5PTmjtUV5S9CpIeWmSyP2rcznjB5KzKugJgurmAgW_gEYtttD7nINZBtOZaJkavDpqRQ28TX2HAMhEwHO06uw1eVb7QdhD3DdF3PNC2MLNvTgSULJWR39yeqr5F_A_5z4Kw)
 
-**State Configuration:**
+The object is always in exactly **one** state, stored in `currentState`. The one before it is kept in `previousState`.
 
-Each state has:
+### State configuration
 
-- **HandleEvent**: Processes events and triggers state transitions
-- **Entry**: Called once when entering the state
-- **Update**: Called every frame while in the state
-- **Exit**: Called once when leaving the state
+Every state is described by a `StateConfig`: a name, four function pointers and its transition table.
 
-**Example State Setup:**
+```c
+typedef struct StateConfig
+{
+    const char *name;          // e.g. "Player_Idle"
+    EventFunction HandleEvent; // what this state does when an event arrives
+    StateFunction Entry;       // runs once, when the state starts
+    StateFunction Update;      // runs every frame while in the state
+    StateFunction Exit;        // runs once, when the state ends
+    State *nextStates;         // the states it may change to
+    int nextStatesCount;
+} StateConfig;
+```
+
+- **HandleEvent:** decides what to do with each event, usually by asking for a new state with `ChangeState()`.
+- **Entry:** called **once**, when the state starts. Reset timers, set the colour.
+- **Update:** called **every frame** while in the state. Movement and timers go here.
+- **Exit:** called **once**, when the state ends. Tidy up.
+
+### Example state setup
+
+The player's Idle state is set up like this in `InitPlayerFSM()`:
 
 ```c
 // Define valid transitions from IDLE
@@ -174,17 +298,25 @@ object->stateConfigs[STATE_IDLE].Update = PlayerUpdateIdle;
 object->stateConfigs[STATE_IDLE].Exit = PlayerExitIdle;
 
 // Set valid transitions
-StateTransitions(&object->stateConfigs[STATE_IDLE], idleValidTransitions, 
+StateTransitions(&object->stateConfigs[STATE_IDLE], idleValidTransitions,
                  sizeof(idleValidTransitions) / sizeof(State));
 ```
 
-**FSM State Diagram:**
+When a state's `HandleEvent` asks for a new state, `ChangeState()` checks the table first. If the move is allowed, it runs the old state's `Exit()`, then the new state's `Entry()`. If not, it prints `Invalid state transition` and nothing changes.
+
+### The player's state diagram
 
 [![](https://mermaid.ink/img/pako:eNqNk1FrwjAUhf9KuE_bqNIW22oeBrJ2wzGraOdg6xjBRg3YVGK66cT_vtTq7Cy0y1NO8p17Twh3B9MkooBhLYmkLiNzQeLGpxlypNbbzTtqNG7ROOgG3kfPffLy87MuXPcHk57_gJE38fwgU1XwfW9UgJWqgh-f-8MCnckK2vW67gl1e8e6RT4PevGwk8Mf-F4lXJ28hNdkL_G16fP-pfQBi6lA3mbFBF1X8qd_-uNAV19MLhDjq1ReV9prAx5f_P-EZUNtjwwo8CNvPOy--Bh1U5mgQBC-ZpIlvGg5MqVYFxbQQMWMCYvUUOyyAiHIBY1pCFhtIzoj6VKGEPK9Qokyj7d8CliKlGogknS-ADwjy7VS6So6D9Xv6Yrw1ySJT5a5yFod7ZRHVNwlKZeALfPAAt7BBrBtN9uObRm6beqG4RgdDbaATaup222r1TZ10zJatrXX4PtQXFe4Y7dbRqejm4bT6jga0IjJRPTzgT_M_f4Hvy8ksA?type=png)](https://mermaid.live/edit#pako:eNqNk1FrwjAUhf9KuE_bqNIW22oeBrJ2wzGraOdg6xjBRg3YVGK66cT_vtTq7Cy0y1NO8p17Twh3B9MkooBhLYmkLiNzQeLGpxlypNbbzTtqNG7ROOgG3kfPffLy87MuXPcHk57_gJE38fwgU1XwfW9UgJWqgh-f-8MCnckK2vW67gl1e8e6RT4PevGwk8Mf-F4lXJ28hNdkL_G16fP-pfQBi6lA3mbFBF1X8qd_-uNAV19MLhDjq1ReV9prAx5f_P-EZUNtjwwo8CNvPOy--Bh1U5mgQBC-ZpIlvGg5MqVYFxbQQMWMCYvUUOyyAiHIBY1pCFhtIzoj6VKGEPK9Qokyj7d8CliKlGogknS-ADwjy7VS6So6D9Xv6Yrw1ySJT5a5yFod7ZRHVNwlKZeALfPAAt7BBrBtN9uObRm6beqG4RgdDbaATaup222r1TZ10zJatrXX4PtQXFe4Y7dbRqejm4bT6jga0IjJRPTzgT_M_f4Hvy8ksA)
 
-### 2. Event System
+This is how the player is **meant** to work. Compare it with the transition tables in `player.c`: one arrow is missing from the code. You'll fix it in Task 2.
 
-Defines different types of events that can trigger state changes in the game. Events trigger state transitions:
+> **Why not just use `bool`s?** With `isJumping`, `isFiring` and `isDead`, nothing stops all three being `true` at once, and every new flag doubles the number of combinations to check. An FSM is in exactly one state, and the transition tables say, in one place, what can follow what.
+
+---
+
+## Events
+
+Events are what happened. They're defined in `events.h`, and they cause state changes:
 
 ```c
 typedef enum
@@ -201,420 +333,625 @@ typedef enum
 } Event;
 ```
 
-### 3. Command Pattern
+The same event can mean different things in different states. `EVENT_FIRE` starts firing in Idle, but Jumping ignores it.
 
-The command system uses bitwise flags for simultaneous actions:
+---
 
-**Command Flags:**
+## Commands as bit flags
+
+The command system is the one from the last practical. Every command gets its own bit, so one number can hold any mix of them:
 
 ```c
 typedef enum
 {
-    NONE         = 0,        // No command
-    MOVE_UP      = 1 << 0,   // Binary: 000001
-    MOVE_DOWN    = 1 << 1,   // Binary: 000010
-    MOVE_LEFT    = 1 << 2,   // Binary: 000100
-    MOVE_RIGHT   = 1 << 3,   // Binary: 001000
-    JUMP         = 1 << 4,   // Binary: 010000
-    FIRE         = 1 << 5,   // Binary: 100000
-    COMMAND_COUNT = 6
+    NONE          = 0,        // No command
+    MOVE_UP       = 1 << 0,   // Binary: 000001
+    MOVE_DOWN     = 1 << 1,   // Binary: 000010
+    MOVE_LEFT     = 1 << 2,   // Binary: 000100
+    MOVE_RIGHT    = 1 << 3,   // Binary: 001000
+    JUMP          = 1 << 4,   // Binary: 010000
+    FIRE          = 1 << 5,   // Binary: 100000
+    COMMAND_COUNT = 6         // How many commands there are: NOT a flag
 } Command;
 ```
 
-**Command Combinations:**
+> **`COMMAND_COUNT` is a number, not a flag.** Never OR it into a command. When you add a command, increase it by one.
+
+### Combining commands
 
 ```c
 // Move left AND jump simultaneously
 Command combo = MOVE_LEFT | JUMP;
 // Binary: 000100 | 010000 = 010100
 
-// Check if MOVE_LEFT is active
-if (IsCommandActive(command, MOVE_LEFT)) {
-    // Execute move left
-}
+if (IsCommandActive(combo, MOVE_LEFT))   // TRUE: bit 2 is set
+    // ...
 
-// Check if JUMP is active
-if (IsCommandActive(command, JUMP)) {
-    // Execute jump
-}
+if (IsCommandActive(combo, JUMP))        // TRUE: bit 4 is set
+    // ...
 ```
 
-**Command Flow:**
+### From command to event
 
 [![](https://mermaid.ink/img/pako:eNpVkm9r2zAQxr-KUKFv6mZW_KeOMwqJk42VhYaWdjC7DMU-Jd4sychSaRby3acoTpfei0O65_ndCXQ7XMoKcIrXirYb9P2hEMjGJF82dAsKfROt0Z9X6tPtj6vHlpaAWgVdB9ULur6-RdN8KZvGmdBF6I9tImNnfwBtlOhQJjmnono59p06Ksv7KvrS0HXn_Iv75_mvpyW6fAWlx-juabF0dZ_4vk96PHP4LJ-_QWk0nLp8nJxtoPyDaKnrV0CrWnc9PHPwPP9KOdyvfkOp0cSapOgfIK39Ct0Z3vbAMXd62wCaIFY3TXoBhEWMnSvTXmGMhUDOlexdOVDnyux_N_aRmZ-Y6KBhD3NQnNaV_aHdwVdgvQEOBU7tsQJGTaMLXIi9tVKj5eNWlDjVyoCHlTTrDU4ZbTp7M21FNcxqan-av1dbKn5KyU_IWh1G9TiIClQmjdA4jWLnxekOv-E0iQbRcJTEJIx8MooC4uEtTsNgQOKb-MbWkoD4UbT38F_X3B8kJIjJMAlGw9BGHHgYqlpLtThun1vC_T_t4cec?type=png)](https://mermaid.live/edit#pako:eNpVkm9r2zAQxr-KUKFv6mZW_KeOMwqJk42VhYaWdjC7DMU-Jd4sychSaRby3acoTpfei0O65_ndCXQ7XMoKcIrXirYb9P2hEMjGJF82dAsKfROt0Z9X6tPtj6vHlpaAWgVdB9ULur6-RdN8KZvGmdBF6I9tImNnfwBtlOhQJjmnono59p06Ksv7KvrS0HXn_Iv75_mvpyW6fAWlx-juabF0dZ_4vk96PHP4LJ-_QWk0nLp8nJxtoPyDaKnrV0CrWnc9PHPwPP9KOdyvfkOp0cSapOgfIK39Ct0Z3vbAMXd62wCaIFY3TXoBhEWMnSvTXmGMhUDOlexdOVDnyux_N_aRmZ-Y6KBhD3NQnNaV_aHdwVdgvQEOBU7tsQJGTaMLXIi9tVKj5eNWlDjVyoCHlTTrDU4ZbTp7M21FNcxqan-av1dbKn5KyU_IWh1G9TiIClQmjdA4jWLnxekOv-E0iQbRcJTEJIx8MooC4uEtTsNgQOKb-MbWkoD4UbT38F_X3B8kJIjJMAlGw9BGHHgYqlpLtThun1vC_T_t4cec)
 
-### 4. Collision Detection
+`ExecuteCommand()` in `command.c` turns the bits into events:
 
-The collision system uses cute_c2 for circle-based collision:
+- any movement bit sets `inputAxis` and sends `EVENT_MOVE`; no movement sends `EVENT_NONE`,
+- `JUMP` sends `EVENT_JUMP`,
+- `FIRE` sends `EVENT_FIRE`.
 
-**Collision Flow:**
+Several events can arrive in the same frame, one after the other.
+
+---
+
+## Collision detection
+
+The collision system uses cute_c2 circles. `UpdateGame()` tracks when a collision starts, continues and ends:
 
 ```c
-// Update colliders
-player->base.collider.p.x = player->base.x;
-player->base.collider.p.y = player->base.y;
-player->base.collider.r = player->base.r;
+// Update colliders to match the objects
+data->player->base.collider.p.x = data->player->base.x;
+data->player->base.collider.p.y = data->player->base.y;
+data->player->base.collider.r = data->player->base.r;
 
 // Check collision
-bool isColliding = CheckCollision(&player->base, &npc->base);
+bool isColliding = CheckCollision(&data->player->base, &data->npc->base);
 
-// Handle collision states
-if (isColliding && !player->base.isColliding) {
-    // ENTER: First frame of collision
-    HandleEvent(&player->base, EVENT_COLLISION_START, deltaTime);
-    CollisionEntry(&player->base, &npc->base);
-    HandleCollision(&player->base, &npc->base);
+if (isColliding && !data->player->base.isColliding)
+{
+    // ENTER: first frame of the collision
+    HandleEvent(&data->player->base, EVENT_COLLISION_START, deltaTime);
+    CollisionEntry(&data->player->base, &data->npc->base);   // damage
+    HandleCollision(&data->player->base, &data->npc->base);  // pushback
 }
-else if (!isColliding && player->base.isColliding) {
-    // EXIT: First frame after collision ends
-    HandleEvent(&player->base, EVENT_COLLISION_END, deltaTime);
-    CollisionExit(&player->base, &npc->base);
+else if (!isColliding && data->player->base.isColliding)
+{
+    // EXIT: first frame after the collision ends
+    HandleEvent(&data->player->base, EVENT_COLLISION_END, deltaTime);
+    CollisionExit(&data->player->base, &data->npc->base);
 }
-else if (isColliding && player->base.isColliding) {
-    // ONGOING: Continue collision response
-    HandleCollision(&player->base, &npc->base);
+else if (isColliding && data->player->base.isColliding)
+{
+    // ONGOING: keep pushing apart
+    HandleCollision(&data->player->base, &data->npc->base);
 }
 ```
 
-**Collision Features:**
+The NPC gets the same events. Damage happens once, on ENTER, so the health bars don't drain 60 times a second.
 
-- Circle-to-circle collision detection
-- Collision manifolds for separation
-- Collision events integrated with FSM
-- Pushback/separation response
-- Health damage on collision
+---
 
-### 5. GameObject
+## Game objects
 
-**Base GameObject Structure:**
-
-A `GameObject` represents an entity in the game. It has:
-
-- A name
-- A health value
-- A state (current and previous states)
-
-Functions to initialise and delete `GameObject` instances are included, along with logic to handle state transitions.
-
-Class diagram
+The player and NPC are both a `GameObject`, with extras:
 
 [![](https://mermaid.ink/img/pako:eNqtVe1u2jAUfRXLUiW6pqihUEJUIVUQOqbxoUI7aWOqXHJJUiU2cpy2rOLdZydpMRjUbVp-JPa5x_Y5vtfxK54zH7CL5zFJ025EAk6SGUXyOTpCHs2StOjlceQ9ARXotYDUc3kJktNub5AT784bTu-Ho6FngIPRnQn2-jcm-OV2MDbAbt8k3niT8dW3oYF3RrfDaYGuZ1T3MBFEwAceJtOrqXff7371DFB66A-vDVi62AcrH_vwrnfVNcB9mmUWrkkCo4dHmAsLDccdCxHqo3FMVsALS7CVow1dN3kyETyiAaIyuoWqzVhyeIpYluY9IzrPOJdp3xvsMLqIgh8_UbrppRopkuUSAolFqIFPLPJRn0ZiI7WidB3vcroQgwCNZTA-y72IIS_LSlGcoN4674GxGHUI9agAnouuFL4oPOcNkxwSGsBH1Hz926Uv4YJ6fLjcio35g3zkHnoZnYuIUd3d7sa_c6QtvjoYLfQdHvwSGTPLZFJ4KdK9m8pNoMOyN1E7hmWJbhlV40gQcEhTuaQWUERVBfK7P_1lsDcZVLSiZg-Pf1kGOwLLo6NrXMSMCFXDSUSJgSdkCyzHK3VF87D6Iv7_DMi_wQ3EROUuDaNlmR61kaenbf3kuyiiIfBIlJRS8wcsLTTD9gznfNmqVj_Jjl7JLgpJqqkaczaXCUa9mD0bc1Wr7fLmcOWvJidCupdVnDYXZXnZavZUcEt4JqfQdw0J9jY30g5M6ftfhmMLJ8ATEvnyesyLZYZFCPK4Ylc2fViQLBYzPKNrSSWZYJMVnWNX8AwszFkWhNhdkDiVvcJPeb2-o0tCvzOWvA0JuFqqHA7UB54fMuzWGrWcjN1X_IJdu1av1pp2_cw5c-yzRv2iZeEVds-bVcexnXrz3LEbLdtZW_hXPrtdtR2n0Wi2WheS3mzaTQuDHwnGB-Xdrz7r39PqaTE?type=png)](https://mermaid.live/edit#pako:eNqtVe1u2jAUfRXLUiW6pqihUEJUIVUQOqbxoUI7aWOqXHJJUiU2cpy2rOLdZydpMRjUbVp-JPa5x_Y5vtfxK54zH7CL5zFJ025EAk6SGUXyOTpCHs2StOjlceQ9ARXotYDUc3kJktNub5AT784bTu-Ho6FngIPRnQn2-jcm-OV2MDbAbt8k3niT8dW3oYF3RrfDaYGuZ1T3MBFEwAceJtOrqXff7371DFB66A-vDVi62AcrH_vwrnfVNcB9mmUWrkkCo4dHmAsLDccdCxHqo3FMVsALS7CVow1dN3kyETyiAaIyuoWqzVhyeIpYluY9IzrPOJdp3xvsMLqIgh8_UbrppRopkuUSAolFqIFPLPJRn0ZiI7WidB3vcroQgwCNZTA-y72IIS_LSlGcoN4674GxGHUI9agAnouuFL4oPOcNkxwSGsBH1Hz926Uv4YJ6fLjcio35g3zkHnoZnYuIUd3d7sa_c6QtvjoYLfQdHvwSGTPLZFJ4KdK9m8pNoMOyN1E7hmWJbhlV40gQcEhTuaQWUERVBfK7P_1lsDcZVLSiZg-Pf1kGOwLLo6NrXMSMCFXDSUSJgSdkCyzHK3VF87D6Iv7_DMi_wQ3EROUuDaNlmR61kaenbf3kuyiiIfBIlJRS8wcsLTTD9gznfNmqVj_Jjl7JLgpJqqkaczaXCUa9mD0bc1Wr7fLmcOWvJidCupdVnDYXZXnZavZUcEt4JqfQdw0J9jY30g5M6ftfhmMLJ8ATEvnyesyLZYZFCPK4Ylc2fViQLBYzPKNrSSWZYJMVnWNX8AwszFkWhNhdkDiVvcJPeb2-o0tCvzOWvA0JuFqqHA7UB54fMuzWGrWcjN1X_IJdu1av1pp2_cw5c-yzRv2iZeEVds-bVcexnXrz3LEbLdtZW_hXPrtdtR2n0Wi2WheS3mzaTQuDHwnGB-Xdrz7r39PqaTE)
 
+The `GameObject` struct, grouped by what each field is for:
 
 ```c
 typedef struct GameObject
 {
-    const char *name;        // Object identifier
-    
+    const char *name;          // Object identifier
+
     // Transform
-    float x, y;              // Position
-    int r;                   // Radius
-    Vector2 direction;       // Movement direction
-    Vector2 inputAxis;       // Input direction
-    
+    float x, y;                // Position
+    int r;                     // Radius
+    Vector2 direction;         // Movement direction
+    Vector2 inputAxis;         // Input direction
+
     // Collision
-    c2Circle collider;       // Circle collider
-    c2Manifold manifold;     // Collision manifold
-    bool isColliding;        // Collision state
-    
+    c2Circle collider;         // Circle collider
+    c2Manifold manifold;       // Collision manifold
+    bool isColliding;          // Collision state
+
     // Visual
-    Color color;             // Render color
-    
+    Color color;               // Render color
+
     // FSM
-    State previousState;     // Previous state
-    State currentState;      // Current state
+    State previousState;       // Previous state
+    State currentState;        // Current state
     StateConfig *stateConfigs; // State configurations
-    
+
     // Gameplay
-    int health;              // Health points
-    float timer;             // General-purpose timer
+    int health;                // Health points
+    float timer;               // General-purpose timer
 } GameObject;
 ```
 
-Player and NPC Entities (`player.h`, `npc.h`, `player.c`, `npc.c`)**
-
-These files define specific behavior for `Player` and `NPC` entities:
-
-- The `Player` has attributes like stamina and mana, and behaviors like attacking and shielding.
-- The `NPC` has aggression and can perform similar actions like the player.
-
-Both entities use the same FSM system, but each has unique logic for how to handle events in various states.
-
-### 6. Input System
-
-**Keyboard Mapping:**
-- WASD / Arrow Keys: Movement
-- Space: Jump
-- Left Mouse Button: Fire
-
-**Input Processing:**
+`Player` adds `stamina` and `mana`, and `NPC` adds `aggression`. Neither is used much yet; that's up to you. Because `base` is the **first** member of both, a `Player *` can be cast to a `GameObject *` and back:
 
 ```c
-Command PollInput() {
-    Command command = NONE;
-    
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
-        command |= MOVE_UP;
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))
-        command |= MOVE_DOWN;
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))
-        command |= MOVE_LEFT;
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT))
-        command |= MOVE_RIGHT;
-    if (IsKeyPressed(KEY_SPACE))
-        command |= JUMP;
-    if (IsKeyDown(KEY_LEFT_SHIFT))
-        command |= FIRE;
-    
-    return command;
+Player *player = (Player *)object;   // inside a state function
+player->stamina -= 20.0f;
+```
+
+Both use the same FSM code in `fsm.c`, but each has its own states, transition tables and functions in `player.c` and `npc.c`. The NPC only uses Idle, Firing and Dead. Its other states are set to `EMPTY_STATE_CONFIG`.
+
+---
+
+## Walkthrough: adding Crouch to the FSM
+
+Follow these steps to add a new state, **`STATE_CROUCH`**, to the player. Hold **C** to crouch; let go to stand up. Every new state follows the same pattern, so it's worth doing this one carefully before the tasks.
+
+### 1. Add `CROUCH` to `Command`
+
+In **`command.h`**, give it the next free bit, and update `COMMAND_COUNT`:
+
+```c
+	FIRE 			= 1 << 5,	// Binary: 100000
+	CROUCH 			= 1 << 6,	// Binary: 1000000
+	COMMAND_COUNT	= 7 // Total number of commands
+```
+
+### 2. Add `EVENT_CROUCH` to `Event`
+
+In **`events.h`**, add it **before** `EVENT_COUNT`:
+
+```c
+    EVENT_COLLISION_END,   // Collision end event
+    EVENT_CROUCH,          // Crouch event
+    EVENT_COUNT            // Total number of events (for counting purposes)
+```
+
+### 3. Add `STATE_CROUCH` to the FSM
+
+In **`fsm.h`**, add it **before** `STATE_COUNT`:
+
+```c
+    STATE_RESPAWN, // Respawn state (respawns the player)
+    STATE_CROUCH,  // Crouch state
+    STATE_COUNT    // Total number of states (for counting purposes)
+```
+
+### 4. Write the Crouch functions
+
+These are the four function pointers in `StateConfig`. Declare them in **`player.h`**:
+
+```c
+// Crouch state
+void PlayerCrouchHandleEvent(GameObject *object, Event event, float deltaTime);
+void PlayerEnterCrouch(GameObject *object, float deltaTime);
+void PlayerUpdateCrouch(GameObject *object, float deltaTime);
+void PlayerExitCrouch(GameObject *object, float deltaTime);
+```
+
+and write them in **`player.c`**:
+
+```c
+// Handles events for the Player when in the Crouch state
+void PlayerCrouchHandleEvent(GameObject *object, Event event, float deltaTime)
+{
+	switch (event)
+	{
+	case EVENT_NONE:
+		// C released, no movement: stand up
+		ChangeState(object, STATE_IDLE, deltaTime);
+		break;
+	// Ignore Events for other cases
+	case EVENT_MOVE:
+	case EVENT_FIRE:
+	case EVENT_JUMP:
+	case EVENT_DIE:
+	case EVENT_RESPAWN:
+	case EVENT_COLLISION_START:
+	case EVENT_COLLISION_END:
+	case EVENT_CROUCH:
+	case EVENT_COUNT:
+		break;
+	}
+}
+
+void PlayerEnterCrouch(GameObject *object, float deltaTime)
+{
+	(void)deltaTime;
+	printf("\n%s -> ENTER -> Crouch\n", object->name);
+	object->color = DARKBLUE;
+	object->r = DEFAULT_GAMEOBJECT_RADIUS / 2; // smaller while crouching
+}
+
+void PlayerUpdateCrouch(GameObject *object, float deltaTime)
+{
+	(void)object;
+	(void)deltaTime;
+	// Nothing to do while crouching (yet)
+}
+
+void PlayerExitCrouch(GameObject *object, float deltaTime)
+{
+	(void)deltaTime;
+	printf("\n%s <- EXIT <- Crouch\n", object->name);
+	object->r = DEFAULT_GAMEOBJECT_RADIUS;
 }
 ```
 
-## Walkthrough adding _Crouch_ to FSM <a name="walkthrough"></a>
+### 5. Add the state configuration
 
-Follow steps below to add a new **_STATE_CROUCH_** into **Finite State Machine**.
+At the end of `InitPlayerFSM()` in **`player.c`**, register the functions and the transition table:
 
-### 1️⃣ Add _CROUCH_ to _Command_
-Update **`command.h`** to include the new **_CROUCH_** command.
+```c
+	// ---- STATE_CROUCH state configuration ----
+	State crouchValidTransitions[] = {STATE_IDLE};
 
-<img src="./images/command.png" alt="Command" />
+	object->stateConfigs[STATE_CROUCH].name = "Player_Crouch";
+	object->stateConfigs[STATE_CROUCH].HandleEvent = PlayerCrouchHandleEvent;
+	object->stateConfigs[STATE_CROUCH].Entry = PlayerEnterCrouch;
+	object->stateConfigs[STATE_CROUCH].Update = PlayerUpdateCrouch;
+	object->stateConfigs[STATE_CROUCH].Exit = PlayerExitCrouch;
 
-### 2️⃣ Add _EVENT_CROUCH_ to _Event_
-Update **`event.h`** to define new event **_EVENT_CROUCH_** associated with crouching.
+	StateTransitions(&object->stateConfigs[STATE_CROUCH], crouchValidTransitions, sizeof(crouchValidTransitions) / sizeof(State));
+```
 
-<img src="./images/events.png" alt="Events" />
-
-### 3️⃣ Add _STATE_CROUCH_ to _FSM_
-Insert the **_STATE_CROUCH_** enum entry into **`fsm.h`**.
-
-<img src="./images/fsm.png" alt="FSM" />
-
-### 4️⃣ Implement _Crouch_ Handlers
-
-In **`player.h`** and **`player.c`**, add the following functions (these are function pointers in **_StateConfig_**):
-
-- `HandleCrouchEvent`
-- `PlayerEnterCrouch`
-- `PlayerUpdateCrouch`
-- `PlayerExitCrouch`
-
-<img src="./images/handle_event.png" alt="Handle" />
-
-<img src="./images/protocols.png" alt="Protocols" />
-
-### 5️⃣ Add _State_ Configurations in _Player_
-
-Register **_STATE_CROUCH_** protocol callbacks for **_StateConfig_** in **`player.c`**.
-
-<img src="./images/stateconfig.png" alt="StateConfig" />
-
-### 6️⃣ Define How to _Enter()_ / _Exit()_ **_STATE_CROUCH_**
+### 6. Define how to enter and exit Crouch
 
 [![](https://mermaid.ink/img/pako:eNp1UVtrwjAU_ivl7EEYtTRNrW0cwqgFha3CdHvYOkZmjhdmE0lTmRP_--JlUwYLBJLvfJecnC1MlEBgUBlusLfgM83L5joopGPXy_Wr02x2ndH4dpy9DXp3WSGPlTNyQUgfho9pnzmNtOF84MZZaawqFDfvutvnUixxYHe2RmmuQr_jeVch6eyL2VOWj0_qS_sj8ucF1j5Xl_aNs3-qVT2Z_5uQD3PbALhQoi75Qti2t_u8AswcSyyA2aPAKa-XpoBC7iyV10aNNnICzOgaXbAJszmwKV9W9lavxPnbftEVl89KlT-Smd5HneQoBepU1dIAozQ6kIFt4RNYkCSeT0jcJpS248S3xQ0wCyZRlNAw8EPik1a0c-Hr4O57rYC2w5iGhIZxHNGWCygWRun740wPo919A_5pkcg?type=png)](https://mermaid.live/edit#pako:eNp1UVtrwjAU_ivl7EEYtTRNrW0cwqgFha3CdHvYOkZmjhdmE0lTmRP_--JlUwYLBJLvfJecnC1MlEBgUBlusLfgM83L5joopGPXy_Wr02x2ndH4dpy9DXp3WSGPlTNyQUgfho9pnzmNtOF84MZZaawqFDfvutvnUixxYHe2RmmuQr_jeVch6eyL2VOWj0_qS_sj8ucF1j5Xl_aNs3-qVT2Z_5uQD3PbALhQoi75Qti2t_u8AswcSyyA2aPAKa-XpoBC7iyV10aNNnICzOgaXbAJszmwKV9W9lavxPnbftEVl89KlT-Smd5HneQoBepU1dIAozQ6kIFt4RNYkCSeT0jcJpS248S3xQ0wCyZRlNAw8EPik1a0c-Hr4O57rYC2w5iGhIZxHNGWCygWRun740wPo919A_5pkcg)
 
-### 7️⃣ Update _Input_Manager_
+**Entering Crouch** happens in Idle. Add `STATE_CROUCH` to Idle's transition table:
 
-Ensure Input Manager processes **"C" key** triggering Crouch _Command_ / _Event_.
-
-<img src="./images/input.png" alt="Input Manager" />
-
-
-## Tasks <a name="tasks"></a>
-
-### Task 1: Add a New State
-
-1. Add state to `events.h`:
 ```c
-STATE_DASHING,  // Add before STATE_COUNT
+State idleValidTransitions[] = {STATE_MOVING, STATE_FIRING, STATE_JUMPING, STATE_DEAD, STATE_CROUCH};
 ```
 
-2. Implement state functions in `player.c`:
+and handle the event in `PlayerIdleHandleEvent()`:
+
 ```c
-void PlayerDashingHandleEvent(GameObject *object, Event event, float deltaTime);
-void PlayerEnterDashing(GameObject *object, float deltaTime);
-void PlayerUpdateDashing(GameObject *object, float deltaTime);
-void PlayerExitDashing(GameObject *object, float deltaTime);
-```
-Here are the Idle Methods which are function pointers to StateConfig
-```c
-// Define a configuration structure for each state of the GameObject
-typedef struct StateConfig
-{
-    const char *name;          // The name of the state (e.g., "Idle", "Moving")
-    EventFunction HandleEvent; // Pointer to the function that handles events in this state
-    StateFunction Entry;       // Pointer to the function that is called when entering this state
-    StateFunction Update;      // Pointer to the function that is called to update the state
-    StateFunction Exit;        // Pointer to the function that is called when exiting this state
-    State *nextStates;         // Array of possible next states (state transitions)
-    int nextStatesCount;       // Number of possible next states
-} StateConfig;                 // Define 'StateConfig' as a structure that holds all state-related configurations
-```
-Idle Player function pointers
-```c
-// Handles events specific to the Player_Idle state, such as reacting to input
-// or conditions that could trigger a state transition (e.g., movement or firing).
-void PlayerIdleHandleEvent(Player* object, Event event);
-
-// Executed when the player enters the idle state. This function can be used to
-// reset animations, stop movement, or prepare the player for an idle stance.
-void PlayerEnterIdle(Player* object);
-
-// Called on every update tick while the player remains in the idle state.
-// It may handle idle animations or monitor for any transitions to other states.
-void PlayerUpdateIdle(Player* object);
-
-// Executed when the player exits the idle state, allowing cleanup tasks
-// or transitions to be set up for the next state (e.g., resetting certain flags).
-void PlayerExitIdle(Player* object);
-```
-Configurered using
-```c
-
-object->stateConfigs = (StateConfig *)malloc(sizeof(StateConfig) * STATE_COUNT);
-
-// STATE_IDLE state configuration
-State idleValidTransitions[] = {STATE_MOVING, STATE_DEAD};
-
-object->stateConfigs[STATE_IDLE].name = "Player_Idle";
-object->stateConfigs[STATE_IDLE].HandleEvent = PlayerIdleHandleEvent;
-object->stateConfigs[STATE_IDLE].Entry = PlayerEnterIdle;
-object->stateConfigs[STATE_IDLE].Update = PlayerUpdateIdle;
-object->stateConfigs[STATE_IDLE].Exit = PlayerExitIdle;
+	case EVENT_CROUCH:
+		ChangeState(object, STATE_CROUCH, deltaTime);
+		break;
 ```
 
-3. Configure state in `InitPlayerFSM()`:
+**Exiting Crouch** happens on `EVENT_NONE`, in `PlayerCrouchHandleEvent()` from step 4.
+
+### 7. Update the input manager and `ExecuteCommand()`
+
+In **`input_manager.c`**, set the bit while **C** is held:
+
 ```c
-State dashingValidTransitions[] = {STATE_IDLE, STATE_DEAD};
-object->stateConfigs[STATE_DASHING].name = "Player_Dashing";
-// ... set function pointers
-StateTransitions(&object->stateConfigs[STATE_DASHING], dashingValidTransitions, 2);
+    if (IsKeyDown(KEY_C))
+        command |= CROUCH;
 ```
 
-### Task 2: Add a New Command (DODGE)
+In **`command.c`**, in `ExecuteCommand()`, straight after `object->inputAxis = axis;`:
 
-1. Add command flag in `command.h`:
 ```c
-DODGE = 1 << 6,  // Binary: 1000000
+    // Crouch: while CROUCH is held, send only EVENT_CROUCH
+    if (IsCommandActive(command, CROUCH))
+    {
+        HandleEvent(object, EVENT_CROUCH, deltaTime);
+        return;
+    }
 ```
 
-2. Add input binding in `input_manager.c`:
-```c
-if (IsKeyPressed(KEY_LEFT_CONTROL))
-    command |= DODGE;
+> **Why the `return`?** Without it, `ExecuteCommand()` also sends `EVENT_NONE` while you hold C without moving. Crouch would stand you up, and Idle would crouch you again, **every frame**. Watch out for this with any state you hold a key for.
+
+### 8. Tidy up everything else
+
+- **`npc.c`:** in `InitNPCFSM()`, add `object->stateConfigs[STATE_CROUCH] = EMPTY_STATE_CONFIG;`. **Don't skip this one.** Without it, that slot is full of random memory, and the game crashes when it closes.
+- **Every `switch (event)`** in `player.c` and `npc.c` needs a `case EVENT_CROUCH:` with the ignored events. The compiler warns you about each one it finds; that's why the switches list every event.
+- **`hud.c` (optional):** show it on screen:
+
+  ```c
+  DrawActiveCommand(hud->lastCommand, CROUCH, "CROUCH", &y, PURPLE);
+  ```
+
+Build it, hold C and watch the console:
+
+```
+Player Hero <- EXIT <- Idle
+Player Hero -> ENTER -> Crouch
 ```
 
-3. Handle command in `command.c`:
-```c
-if (IsCommandActive(command, DODGE))
-    HandleEvent(mediator->object, EVENT_DODGE, deltaTime);
+Try crouching while you move, and moving while you crouch. Neither works yet, because only Idle can go to Crouch, and Crouch can only go to Idle. Whether they **should** work is a design decision. If they should, add the transitions.
+
+---
+
+## The tasks
+
+Already working in the starter code:
+
+- [x] Player states: Idle, Moving, Firing, Jumping, Dead and Respawn
+- [x] NPC states: Idle, Firing and Dead
+- [x] Entry, Update and Exit for every state, with a colour and a "breathing" effect so you can see which state is active
+- [x] Firing and Jumping end on a timer
+- [x] Collision with the NPC: both are pushed apart and lose health
+- [x] Health bars above both objects
+- [x] A HUD showing the command bits, the player's current state and a jump counter
+- [x] Every state change printed to the console, and the command bits printed when they change
+
+### Task 1: Explore the starter code
+
+Run it, then find:
+
+1. in `player.c`, the transition table (`…ValidTransitions[]`) for each state,
+2. in `command.c`, where `ExecuteCommand()` turns command bits into events,
+3. in `fsm.c`, where `ChangeState()` calls `Exit()` and then `Entry()`, and where it refuses a transition,
+4. in `player.c`, how `PlayerUpdateJumping()` decides the jump is over,
+5. in `npc.c`, which states are set to `EMPTY_STATE_CONFIG`,
+6. in `game.c`, where collisions start and end, and which events they send.
+
+Then move, jump and fire, and watch the console. Each change prints two lines, for example:
+
+```
+Player Hero <- EXIT <- Idle
+Player Hero -> ENTER -> Jumping
 ```
 
-4. Add EVENT_DODGE to `events.h` and handle in state functions
+> Want to see every state and its table at once? Call `PrintStateConfigs(data->player->base.stateConfigs, STATE_COUNT);` at the end of `InitGame()`.
 
-### Task 3: Modify Collision Response
+### Task 2: Jump while moving
 
-Experiment with different collision behaviors:
+Hold **D** to move right, then press **SPACE**. The player doesn't jump, and the console says:
 
-- Change damage values in `collision.c`
-- Modify pushback distance
-- Add different collision types (friendly, enemy, neutral)
-- Implement collision-based state transitions
+```
+Invalid state transition from Player_Moving to Player_Jumping
+```
 
-### Task 4: Create NPC AI Patterns
+The player's state diagram has an arrow from Moving to Jumping, but the code doesn't.
 
-Enhance `aimanager.c` with:
+1. Find out why. `PlayerMovingHandleEvent()` **asks** to change to Jumping, but the Moving transition table doesn't **allow** it.
+2. Fix it by adding `STATE_JUMPING` to `movingValidTransitions[]` in `InitPlayerFSM()`.
+3. Jump while moving. The player should jump in the direction it's moving, because `PlayerEnterJumping()` copies `inputAxis` into `direction`.
 
-- Patrol behavior
-- Chase player when in range
-- Flee when health is low
-- Random movement patterns
+> **Two locks on every door.** The state's `HandleEvent` decides which state to **ask** for. The transition table decides whether that's **allowed**. Both have to agree. When a transition doesn't happen, check both.
 
-### Task 5: Implement Command Combos
+Did you notice the HUD's **Jumps** counter went up even when the jump was refused? The HUD counts JUMP **commands**. Whether a jump really happens is up to the FSM. Change the HUD so it only counts real jumps: the mediator already passes it the state's name.
 
-Create special moves by detecting command sequences:
+### Task 3: Die and respawn
+
+Health goes down on every collision, but nothing ever sends `EVENT_DIE`. Health just stops at 0.
+
+1. **Send the event.** In `game.c`, after `CollisionEntry()`, check each object's health. When it reaches 0, send the event:
+
+   ```c
+   if (data->player->base.health <= 0)
+       HandleEvent(&data->player->base, EVENT_DIE, deltaTime);
+   ```
+
+   Do the same for the NPC.
+
+2. **Make Dead last.** At the moment, `PlayerUpdateDie()` changes to Respawn on the very next frame, so you never see it. Use `timer` to stay dead for **2 seconds** first. `PlayerEnterDie()` already resets the timer.
+
+3. **Make Respawn do something.** In `PlayerEnterRespawn()`, put the player back in the middle of the screen and set `health` back to 100. Stay in Respawn for **1 second**, then change to Idle.
+
+4. **Bring the NPC back.** The NPC's Dead state only leaves on `EVENT_RESPAWN`. Send it from `NPCUpdateDead()` after a few seconds, and reset the NPC's health.
+
+5. **Finish the handlers.** `PlayerDieHandleEvent()` and `PlayerRespawnHandleEvent()` ignore every event. Decide what, if anything, a dead player should react to. Can a respawning player be hurt?
+
+> **Where does the code go?** Something that happens **once**, like resetting health, goes in `Entry()` or `Exit()`. Something that happens **over time**, like a countdown, goes in `Update()`. Putting a one-off in `Update()` runs it 60 times a second.
+
+### Task 4: Add a new state (Dashing)
+
+Using the Crouch walkthrough as your guide, add a **Dashing** state: a short, fast burst in the direction the player is moving.
+
+1. Add `STATE_DASHING` to `fsm.h`, **before** `STATE_COUNT`.
+2. Add a `DASH` command, an `EVENT_DASH` event, and the key binding (e.g. **E**, with `IsKeyPressed`).
+3. Write the state functions in `player.h` and `player.c`:
+
+   ```c
+   void PlayerDashingHandleEvent(GameObject *object, Event event, float deltaTime);
+   void PlayerEnterDashing(GameObject *object, float deltaTime);
+   void PlayerUpdateDashing(GameObject *object, float deltaTime);
+   void PlayerExitDashing(GameObject *object, float deltaTime);
+   ```
+
+4. Configure the state in `InitPlayerFSM()`:
+
+   ```c
+   State dashingValidTransitions[] = {STATE_IDLE, STATE_MOVING, STATE_DEAD};
+   object->stateConfigs[STATE_DASHING].name = "Player_Dashing";
+   // ... set the function pointers
+   StateTransitions(&object->stateConfigs[STATE_DASHING], dashingValidTransitions, 3);
+   ```
+
+5. Decide which states can **start** a dash, and add `STATE_DASHING` to their tables.
+6. In `PlayerUpdateDashing()`, move fast (say 600 units a second) for 0.15 seconds, then go back to Moving or Idle, like `PlayerUpdateFiring()` does.
+7. Don't forget step 8 of the walkthrough: the NPC's `EMPTY_STATE_CONFIG` and every `switch`.
+
+### Task 5: Add a new command (Dodge)
+
+Not every command needs its own state. Add **DODGE**: a quick sidestep that the current state handles itself.
+
+1. Add the command flag in `command.h`, and update `COMMAND_COUNT`:
+
+   ```c
+   DODGE = 1 << 8,  // or the next free bit
+   ```
+
+2. Add the input binding in `input_manager.c`:
+
+   ```c
+   if (IsKeyPressed(KEY_LEFT_CONTROL))
+       command |= DODGE;
+   ```
+
+3. Send an event in `ExecuteCommand()` in `command.c`:
+
+   ```c
+   if (IsCommandActive(command, DODGE))
+       HandleEvent(object, EVENT_DODGE, deltaTime);
+   ```
+
+4. Add `EVENT_DODGE` to `events.h`, and handle it in the state functions. In Idle and Moving, move the player a short fixed distance sideways. In Jumping, ignore it.
+
+When should something be a **state**, and when is an **event** handled inside a state enough? Write one sentence on it in your comments.
+
+### Task 6: Change the collision response
+
+Experiment with how collisions behave:
+
+- Change the damage values (`DAMAGE_DEFAULT` in `constants.h`).
+- Change the pushback distance (`PUSHBACK_DISTANCE`).
+- Make collisions change state: the FSMs already receive `EVENT_COLLISION_START` and `EVENT_COLLISION_END`, but every handler ignores them. Make the NPC start firing when the player touches it.
+- `CollisionExit()` in `collision.c` sets both colours directly, behind the FSM's back. Move the colour change into a state instead.
+
+### Task 7: Give the NPC a brain
+
+Watch the NPC for a few seconds. It fires almost non-stop. `PollAI()` picks a random command **every frame**, so FIRE comes up within a few frames every time the NPC returns to Idle.
+
+1. Make `PollAI()` decide only **once a second**. Keep the time of the last decision in a `static double` and compare it with `GetTime()`. Between decisions, return `NONE`.
+2. Use the NPC's `aggression` (0 to 100) to decide how likely it is to fire. Pass it to `PollAI()` as a parameter, so the AI manager still doesn't need to know what an NPC is.
+3. Then try some patterns in `ai_manager.c`. Each will need more states for the NPC:
+   - **Patrol:** move back and forth between two points.
+   - **Chase:** move towards the player when it's in range.
+   - **Flee:** run away when health is low.
+   - **Wander:** random movement.
+
+### Task 8: Command combos
+
+Make a sequence of inputs trigger something special. For example, **double-tap A** within 0.3 seconds to dash left:
+
 ```c
 // Double-tap detection
-if (IsCommandActive(command, MOVE_LEFT)) {
-    if (lastCommandTime - currentTime < DOUBLE_TAP_WINDOW) {
+static double lastTapTime = 0.0;
+
+if (IsKeyPressed(KEY_A))
+{
+    double now = GetTime();
+    if (now - lastTapTime < DOUBLE_TAP_WINDOW)   // e.g. #define DOUBLE_TAP_WINDOW 0.3
+    {
         // Trigger dash left
     }
+    lastTapTime = now;
 }
 ```
 
-### Task 6: Add Visual Effects
+Combos need memory between frames, so keep the last tap time in a `static` variable or in a struct, never in a normal local variable.
 
-Enhance visual feedback:
+### Task 9: Visual effects
 
-- Trail effects during movement
-- Impact effects on collision
-- State-based animations (breathing in idle)
-- Health bar improvements
+Give the player more feedback:
 
-## Usage Examples
+- a trail while moving,
+- an impact effect on collision,
+- different animations for each state (Idle already "breathes"),
+- a better health bar: change colour as health drops.
 
-### Basic Game Loop
+Each effect belongs to a state. Start it in `Entry()`, run it in `Update()`, and stop it in `Exit()`.
+
+### Task 10: Stretch goals
+
+- **Spend stamina and mana:** jumping costs stamina and firing costs mana. Both refill in Idle using `deltaTime`. When there isn't enough, the state's `HandleEvent` doesn't ask for the change.
+- **Show the NPC's state:** the HUD only shows the player's. Draw `stateConfigs[currentState].name` above each object, or give the NPC's mediator a HUD of its own.
+- **Go back to the previous state:** `previousState` is stored but never used. Use it so that Firing returns to whichever state the player was in before.
+- **Load the transition tables from a file:** read `nextStates` from a text file at start-up, so a designer can change what follows what without recompiling.
+
+---
+
+## Cheat sheet
 
 ```c
-int main(void) {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Game Starter Kit");
-    SetTargetFPS(60);
-    
-    GameData *data = (GameData *)malloc(sizeof(GameData));
-    InitGame(data);
-    
-    while (!WindowShouldClose()) {
-        float deltaTime = GetFrameTime();
-        
-        UpdateGame(data, deltaTime);
-        
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
-        DrawGame(data);
-        EndDrawing();
+// The FSM functions (fsm.c)
+HandleEvent(obj, EVENT_JUMP, deltaTime);   // send an event to the current state
+ChangeState(obj, STATE_IDLE, deltaTime);   // ask to change state; false if not allowed
+CanEnterState(obj, STATE_DEAD);            // would that change be allowed?
+UpdateState(obj, deltaTime);               // run the current state's Update
+PrintStateConfigs(obj->stateConfigs, STATE_COUNT);   // print every state and its table
+
+// Where am I?
+obj->currentState                          // e.g. STATE_JUMPING
+obj->stateConfigs[obj->currentState].name  // e.g. "Player_Jumping"
+obj->previousState                         // the state before this one
+```
+
+A state's event handler, with a new event:
+
+```c
+void PlayerCustomHandleEvent(GameObject *object, Event event, float deltaTime)
+{
+    switch (event)
+    {
+    case EVENT_CUSTOM:
+        ChangeState(object, STATE_CUSTOM, deltaTime);
+        break;
+    // Ignore every other event: list each one
+    case EVENT_NONE:
+    case EVENT_MOVE:
+    // ...and the rest
+        break;
     }
-    
-    CloseGame(data);
-    CloseWindow();
-    
-    return 0;
 }
 ```
 
-### Adding Custom Player Behavior
+A state that ends on a timer:
 
 ```c
-void PlayerCustomHandleEvent(GameObject *object, Event event, float deltaTime) {
-    switch (event) {
-        case EVENT_CUSTOM:
-            ChangeState(object, STATE_CUSTOM, deltaTime);
-            break;
-        // Handle other events...
-    }
-}
+void PlayerUpdateCustom(GameObject *object, float deltaTime)
+{
+    object->timer += deltaTime;   // timer was reset to 0 in Entry()
 
-void PlayerUpdateCustom(GameObject *object, float deltaTime) {
-    Player *player = (Player *)object;
-    
-    // Custom update logic
-    player->base.timer += deltaTime;
-    
-    if (player->base.timer >= CUSTOM_DURATION) {
+    if (object->timer >= CUSTOM_DURATION)
         ChangeState(object, STATE_IDLE, deltaTime);
-    }
 }
 ```
 
-## Resources and how to Modify or Extend  <a name="resources"></a>
+Bit flags and input, from the last practical:
 
-You can modify or extend this starter kit in various ways:
+```c
+c |= JUMP;                     // turn a bit ON
+c &= ~JUMP;                    // turn a bit OFF
+if (c & JUMP) { }              // is the bit on? (what IsCommandActive does)
 
-- **Add New States**: Add new states to the FSM by extending the `State` enum and updating the state transition logic in `fsm.c`.
-- **Create New Events**: Define new events in `events.h` and add corresponding behavior in the FSM.
-- **Create New Behaviors**: Extend the `Player` or `NPC` behavior by adding more specific functions in `player.c` or `npc.c`.
+IsKeyDown(KEY_C);              // true every frame the key is held (crouch, move)
+IsKeyPressed(KEY_E);           // true once, on the frame it goes down (dash, dodge)
+double now = GetTime();        // seconds since the game started (timers, combos)
+```
 
-Feel free to extend this framework to create a more complex game.
+> The starter code lists every event in each `switch` instead of using `default:`. That way the compiler warns you when you add an event and forget a handler. With `default:`, it can't.
 
-## Support  <a name="support"></a>
-### Who do I talk to? ###
+---
 
-* muddygames
+## When things go wrong
+
+Don't panic. Nine times out of ten it's one of these:
+
+| You see… | What's going on | Fix |
+|---|---|---|
+| `raylib.h: No such file or directory` | make can't find raylib | Run the setup script again (Step 2) |
+| `Invalid state transition from A to B` | The state asked for B, but B isn't in A's table | Add B to A's `…ValidTransitions[]`, or stop asking for it (Task 2) |
+| Nothing happens, and no message either | The state's `HandleEvent` ignores that event | Add a `case` that calls `ChangeState()` |
+| The state flips in and out every frame | A held key, plus `EVENT_NONE` sent in the same frame | Send only the held key's event, like Crouch does (walkthrough step 7) |
+| The state changes, but the player looks the same | `Entry()` doesn't set a colour, or it's not in the config | Check the config in `Init…FSM()` points at the right functions |
+| The state never ends | Its `Update()` never calls `ChangeState()`, or the timer isn't reset | Reset `timer` in `Entry()`, add `deltaTime` in `Update()` |
+| Something happens 60 times a second | One-off code in `Update()` | Move it to `Entry()` or `Exit()` |
+| The terminal scrolls non-stop | A `printf` in an `Update()` or `HandleEvent` function | Print in `Entry()` and `Exit()` only |
+| `free(): invalid pointer`, or a crash when the game closes | A new state has no config in `npc.c`, so its `nextStates` is random memory | Set it to `EMPTY_STATE_CONFIG` (walkthrough step 8) |
+| `enumeration value 'EVENT_CROUCH' not handled in switch` | A new event isn't in every switch | Add the `case` to each handler |
+| A new command does nothing | `COMMAND_COUNT` not updated, or the bit isn't checked in `ExecuteCommand()` | Check `command.h`, `input_manager.c` **and** `command.c` |
+| Dash fires every frame while the key is held | `IsKeyDown` used for a one-off action | Use `IsKeyPressed` |
+| The NPC fires all the time | `PollAI()` chooses every frame | Task 7 |
+| `Emscripten not found in …` (Linux) | Emscripten isn't in `~/emsdk` | Run the setup script (Step 2) |
+| `emcc: No such file or directory` (Windows) | Emscripten isn't loaded in this terminal | Close w64devkit and open it again |
+| `Address already in use` | A web server from earlier is still running | `make stop_web`, or use another port: `make run_web WEB_PORT=8080` |
+| Browser says it can't connect | The page opened before the server was ready | Refresh the page |
+| The program still won't build | Old leftover files | `make clean`, then `make` again |
+
+Still stuck? Read the **first** error message, not the last. The first one is usually the real problem; the rest are just complaining about it.
+
+---
+
+## Further reading
+
+- [State](https://gameprogrammingpatterns.com/state.html) in *Game Programming Patterns* by Robert Nystrom: the classic explanation, starting with exactly the `bool` mess this practical avoids
+- [State](https://refactoring.guru/design-patterns/state), [Command](https://refactoring.guru/design-patterns/command) and [Mediator](https://refactoring.guru/design-patterns/mediator) on Refactoring.Guru: diagrams and plain-English explanations
+- [raylib cheatsheet](https://www.raylib.com/cheatsheet/cheatsheet.html) and [examples](https://www.raylib.com/examples.html)
+- [cute_c2](https://github.com/RandyGaul/cute_headers/blob/master/cute_c2.h) by Randy Gaul: the collision library, with its documentation at the top of the header
+
+---
+
+## Before you submit
+
+- [ ] It compiles and runs with no errors or warnings
+- [ ] Crouch works, following the walkthrough
+- [ ] The player can jump while moving, and no `Invalid state transition` appears in normal play
+- [ ] The HUD's jump counter only counts jumps that really happened
+- [ ] The player and the NPC die at 0 health, stay dead for a while and come back with full health
+- [ ] Dashing is a state, and Dodge is handled inside states
+- [ ] The NPC decides once a second, using its aggression, and has at least one AI pattern
+- [ ] The game still closes cleanly, with no crash
+- [ ] The state diagrams match your transition tables (click a diagram to edit it in the Mermaid Live Editor)
+- [ ] Your code is commented and tidy
+
+Commit early and commit often. Unlike the player, your deadline has no Respawn state.
+
+Best of luck. Now go make something with a bit of character.
