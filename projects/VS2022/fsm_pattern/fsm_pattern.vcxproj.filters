@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\ai_manager.c" />
+    <ClCompile Include="..\..\..\src\collision.c" />
+    <ClCompile Include="..\..\..\src\command.c" />
+    <ClCompile Include="..\..\..\src\cute_c2_impl.c" />
+    <ClCompile Include="..\..\..\src\fsm.c" />
+    <ClCompile Include="..\..\..\src\game.c" />
+    <ClCompile Include="..\..\..\src\gameobject.c" />
+    <ClCompile Include="..\..\..\src\hud.c" />
+    <ClCompile Include="..\..\..\src\input_manager.c" />
+    <ClCompile Include="..\..\..\src\main.c" />
+    <ClCompile Include="..\..\..\src\mediator.c" />
+    <ClCompile Include="..\..\..\src\npc.c" />
+    <ClCompile Include="..\..\..\src\player.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\platform\fsm_pattern.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{ec5c2e0a-0620-5b46-9277-0c1121368535}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\ai_manager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\collision.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\command.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\constants.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\cute_c2.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\events.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\fsm.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\game.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\gameobject.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\hud.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\input_manager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\mediator.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\npc.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\player.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
