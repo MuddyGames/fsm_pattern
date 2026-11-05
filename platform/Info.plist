@@ -5,15 +5,15 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>collision_detection</string>
+    <string>fsm_pattern</string>
     <key>CFBundleIconFile</key>
-    <string>collision_detection.icns</string>
+    <string>fsm_pattern.icns</string>
     <key>CFBundleIdentifier</key>
-    <string>com.muddy_games.collision_detection</string>
+    <string>com.muddy_games.fsm_pattern</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Drawing Primitives</string>
+    <string>FSM Pattern</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
