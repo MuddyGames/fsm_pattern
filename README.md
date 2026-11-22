@@ -207,14 +207,14 @@ Each frame, `UpdateGame()` in `game.c` does the same three things for the player
 
 ```c
 data->activeCommand = PollInput();                                             // 1. keys -> command bits
-MediatorHandleCommand(data->playerMediator, data->activeCommand, deltaTime);   // 2. command bits -> events -> maybe a new state
+MediatorNotify(data->playerMediator, data->activeCommand, deltaTime);   // 2. command bits -> events -> maybe a new state
 UpdateState((GameObject *)data->player, deltaTime);                            // 3. run the current state's Update
 ```
 
 The mediator passes the command to its two **colleagues**, just like the last practical:
 
 ```c
-void MediatorHandleCommand(Mediator *mediator, Command command, float deltaTime)
+void MediatorNotify(Mediator *mediator, Command command, float deltaTime)
 {
     ExecuteCommand(command, mediator->object, deltaTime);   // 1. the game object acts on it (through its FSM)
 

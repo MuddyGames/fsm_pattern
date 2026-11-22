@@ -20,7 +20,7 @@ Mediator *CreateMediator(GameObject *object, Hud *hud)
 }
 
 // Function to handle command and what needs to be done with it. The mediator is the only place that knows about both the game object and the HUD.
-void MediatorHandleCommand(Mediator *mediator, Command command, float deltaTime)
+void MediatorNotify(Mediator *mediator, Command command, float deltaTime)
 {
     // One command, two collaborators. Neither knows about the other:
     // The mediator is the only place that knows about both.

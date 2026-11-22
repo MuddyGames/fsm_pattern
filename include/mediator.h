@@ -20,8 +20,8 @@ typedef struct Mediator
 // Function to create a mediator instance (hud can be NULL)
 Mediator *CreateMediator(GameObject *object, Hud *hud);
 
-//void MediatorExecuteCommand(Mediator *mediator, Command command, float deltaTime);
-void MediatorHandleCommand(Mediator *mediator, Command command, float deltaTime);
+//void MediatorNotify(Mediator *mediator, Command command, float deltaTime);
+void MediatorNotify(Mediator *mediator, Command command, float deltaTime);
 
 // Cleanup
 void DeleteMediator(Mediator *mediator);

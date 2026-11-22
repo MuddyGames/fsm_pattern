@@ -38,11 +38,11 @@ void UpdateGame(GameData *data, float deltaTime)
 {
 	// Poll input and Handle Command
 	data->activeCommand = PollInput();
-	MediatorHandleCommand(data->playerMediator, data->activeCommand, deltaTime);
+	MediatorNotify(data->playerMediator, data->activeCommand, deltaTime);
 	UpdateState((GameObject *)data->player, deltaTime);
 
 	Command npcCommand = PollAI();
-	MediatorHandleCommand(data->npcMediator, npcCommand, deltaTime);
+	MediatorNotify(data->npcMediator, npcCommand, deltaTime);
 	UpdateState((GameObject *)data->npc, deltaTime);
 
 	// Update the colliders, Collisions using cute_c2 Circle collider
